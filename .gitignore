@@ -1,3 +1,5 @@
 **.sum
 **.toml
+.env
 tmp
+dist

@@ -20,7 +20,6 @@ type jsonResponse struct {
 }
 
 func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request) {
-
 	var payload stripePayload
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
@@ -35,9 +34,9 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	card := cards.Card{
-		Secret:   app.config.stripe.secret,
-		Key:      app.config.stripe.key,
+	card := cards.Card {
+		Secret: app.config.stripe.secret,
+		Key: app.config.stripe.key,
 		Currency: payload.Currency,
 	}
 
@@ -54,20 +53,21 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 			app.errorLog.Println(err)
 			return
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(out)
 	} else {
 		j := jsonResponse{
-			OK:      false,
+			OK: false,
 			Message: msg,
 			Content: "",
 		}
-
+	
 		out, err := json.MarshalIndent(j, "", "   ")
 		if err != nil {
 			app.errorLog.Println(err)
 		}
-
+	
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(out)
 	}
