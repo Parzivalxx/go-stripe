@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"myapp/internal/driver"
+	"myapp/internal/models"
 	"net/http"
 	"os"
 	"time"
@@ -34,6 +36,7 @@ type application struct {
 	errorLog      *log.Logger
 	templateCache map[string]*template.Template
 	version       string
+	DB            models.DBModel
 }
 
 func (app *application) serve() error {
@@ -70,6 +73,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production}")
+	flag.StringVar(&cfg.db.dsn, "dsn", "lloyd:secret@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4001", "URL to api")
 
 	flag.Parse()
@@ -80,6 +84,12 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	conn, err := driver.OpenDB(cfg.db.dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer conn.Close()
+
 	tc := make(map[string]*template.Template)
 
 	app := &application{
@@ -88,9 +98,10 @@ func main() {
 		errorLog:      errorLog,
 		templateCache: tc,
 		version:       version,
+		DB:            models.DBModel{DB: conn},
 	}
 
-	err := app.serve()
+	err = app.serve()
 	if err != nil {
 		app.errorLog.Println(err)
 		log.Fatal(err)
