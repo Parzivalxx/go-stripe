@@ -73,8 +73,8 @@ func main() {
 
 	flag.Parse()
 
-	cfg.stripe.key = getEnvVariable("STRIPE_KEY")
-	cfg.stripe.secret = getEnvVariable("STRIPE_SECRET")
+	cfg.stripe.key = getEnvVariable("STRIPE_PRIMARY_KEY")
+	cfg.stripe.secret = getEnvVariable("STRIPE_SECRET_KEY")
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)

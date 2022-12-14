@@ -11,11 +11,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/joho/godotenv"
 )
 
 const version = "1.0.0"
 const cssVersion = "1"
+
+var session *scs.SessionManager
 
 type config struct {
 	port int
@@ -37,6 +40,7 @@ type application struct {
 	templateCache map[string]*template.Template
 	version       string
 	DB            models.DBModel
+	Session       *scs.SessionManager
 }
 
 func (app *application) serve() error {
@@ -78,8 +82,8 @@ func main() {
 
 	flag.Parse()
 
-	cfg.stripe.key = getEnvVariable("STRIPE_KEY")
-	cfg.stripe.secret = getEnvVariable("STRIPE_SECRET")
+	cfg.stripe.key = getEnvVariable("STRIPE_PRIMARY_KEY")
+	cfg.stripe.secret = getEnvVariable("STRIPE_SECRET_KEY")
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
@@ -90,6 +94,10 @@ func main() {
 	}
 	defer conn.Close()
 
+	// set up session
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+
 	tc := make(map[string]*template.Template)
 
 	app := &application{
@@ -99,6 +107,7 @@ func main() {
 		templateCache: tc,
 		version:       version,
 		DB:            models.DBModel{DB: conn},
+		Session:       session,
 	}
 
 	err = app.serve()
